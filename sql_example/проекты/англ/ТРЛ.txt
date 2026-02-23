@@ -1,0 +1,11 @@
+SELECT
+CASE WHEN tr.level=1 THEN tr.name_en END AS '1',
+CASE WHEN tr.level=2 THEN tr.name_ru END AS '1',
+CASE WHEN tr.level=3 THEN tr.name_ru END AS '1'
+
+
+FROM technology_readiness tr
+
+WHERE tr.id BETWEEN 1 AND 49
+
+GROUP BY tr.id

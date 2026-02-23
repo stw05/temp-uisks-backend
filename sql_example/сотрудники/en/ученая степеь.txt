@@ -1,0 +1,7 @@
+SELECT DISTINCT
+p.academic_degree,
+d.name_en
+
+FROM persons p
+LEFT JOIN degrees d on d.id=p.academic_degree_id
+

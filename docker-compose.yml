@@ -1,0 +1,22 @@
+services:
+  users-db:
+    image: postgres:16-alpine
+    container_name: temp-uisks-users-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: users_db
+      POSTGRES_USER: users_admin
+      POSTGRES_PASSWORD: users_password
+    ports:
+      - "5433:5432"
+    volumes:
+      - users_db_data:/var/lib/postgresql/data
+      - ./docker/users-db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U users_admin -d users_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  users_db_data:

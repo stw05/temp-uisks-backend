@@ -1,0 +1,4 @@
+SELECT
+pp.name_ru
+
+FROM person_position pp

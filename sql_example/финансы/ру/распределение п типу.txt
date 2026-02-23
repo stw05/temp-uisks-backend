@@ -1,0 +1,10 @@
+SELECT DISTINCT
+ct.name,
+sum(b.request_total) OVER (PARTITION BY ct.id) AS 'as'
+
+from obj_main o
+LEFT join competition_types ct ON o.comp_type_id = ct.id
+left JOIN budget b ON b.obj_id=o.id
+
+WHERE o.obj_type_id not IN (3,5)
+

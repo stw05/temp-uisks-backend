@@ -1,0 +1,17 @@
+SELECT DISTINCT
+CASE 
+        WHEN ci.city IN ('Алматы', 'Almaty') THEN 'г. Алматы'
+        WHEN ci.city IN ('Астана', 'Астана (Нур-Султан)', 'Nur-Sultan', 'Astana') THEN 'г. Астана'
+        WHEN ci.city IN ('Шымкент', 'Shymkent') THEN 'г. Шымкент'
+        WHEN ci.city IN ('Семей', 'Semey') THEN 'Абайская область'
+        WHEN ci.city IN ('Жезказган', 'Zhezkazgan') THEN 'Улытауская область'
+        WHEN ci.city IN ('Талдыкорган', 'Taldykorgan') THEN 'Жетысуская область'
+        ELSE s.name
+    END AS 'Регион заявителя'
+
+FROM applicants a 
+LEFT JOIN states s ON a.state_id = s.id
+LEFT join cities ci ON ci.id=a.city_id 
+WHERE s.country_id=222 AND s.name is NOT null
+
+

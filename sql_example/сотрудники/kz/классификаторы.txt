@@ -1,0 +1,5 @@
+SELECT DISTINCT
+sf.name_kz
+FROM science_fields sf 
+                    
+

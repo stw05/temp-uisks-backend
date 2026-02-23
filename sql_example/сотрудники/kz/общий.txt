@@ -1,0 +1,16 @@
+SELECT
+CONCAT_WS(' ',pa.sname,pa.fname,pa.pname) AS 'ФИО',
+p.academic_title AS 'Ученое звание',
+p.academic_degree AS 'Ученая степень',
+p.scopus AS 'Author ID SCOPUS',
+p.webofscience AS 'Researcher ID web of science',
+p.orcid AS 'ORCID ID',
+psi.hindex AS 'H-index',
+year(CURRENT_TIME()-p.birthday) AS 'old' -- пересмотреть
+
+
+from persons p
+LEFT JOIN persons_all pa on pa.main_user_id=p.main_user_id
+left join states s on s.id=p.state_id
+LEFT JOIN cities ci on ci.id=p.city_id
+left join person_scopus_info psi on psi.person_id=p.id

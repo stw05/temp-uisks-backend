@@ -1,0 +1,3 @@
+SELECT
+ot.name_ru
+from overall_types ot

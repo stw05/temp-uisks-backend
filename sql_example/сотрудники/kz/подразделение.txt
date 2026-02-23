@@ -1,0 +1,7 @@
+SELECT
+p.id,
+a.name_kz,
+pa.other
+from persons p
+LEFT join person_applicants pa ON p.id = pa.person_id
+LEFT join applicants a ON pa.applicant_id=a.id

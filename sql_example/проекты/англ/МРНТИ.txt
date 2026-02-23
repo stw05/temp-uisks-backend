@@ -1,0 +1,5 @@
+SELECT
+m.description_en,
+CONCAT_WS('.',m.mrnti1,m.mrnti2,m.mrnti3)
+from mrnti m
+GROUP BY m.id

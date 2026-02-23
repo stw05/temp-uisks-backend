@@ -1,0 +1,3 @@
+SELECT
+p.name_kz
+FROM priorities p

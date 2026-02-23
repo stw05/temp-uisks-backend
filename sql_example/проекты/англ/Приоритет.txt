@@ -1,0 +1,3 @@
+SELECT
+p.name_en
+FROM priorities p

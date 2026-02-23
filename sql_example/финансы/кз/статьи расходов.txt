@@ -1,0 +1,5 @@
+SELECT DISTINCT
+oe.name_kz,
+sum(oe.summ) OVER (PARTITION BY oe.name_kz)
+FROM obj_main o
+LEFT JOIN obj_expenses oe ON oe.obj_id=o.id 

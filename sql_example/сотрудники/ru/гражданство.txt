@@ -1,0 +1,8 @@
+SELECT DISTINCT
+p.resident,
+CASE 
+WHEN p.resident=1 THEN 'Резидент'
+WHEN p.resident=0 THEN 'Не резидент'
+end
+
+FROM persons p

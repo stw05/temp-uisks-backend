@@ -1,0 +1,27 @@
+SET sql_mode='';
+
+SELECT
+    pr.name_ru,
+    SUM(iic.scopus_publications_count)        AS scopus_total,
+    SUM(iic.webofscience_publications_count)  AS wos_total,
+    SUM(iic.publication_native)               AS publication_native_total,
+    SUM(iic.publication_foreign)              AS publication_foreign_total
+
+FROM obj_main o
+LEFT JOIN obj_main o1      ON o.id = o1.parent_id
+LEFT JOIN ic_info_card iic ON o1.id = iic.obj_id
+LEFT JOIN competition_types ct ON o.comp_type_id = ct.id
+LEFT JOIN obj_priorities op ON o.id = op.obj_id
+LEFT JOIN priorities pr     ON pr.id = op.priority_id
+LEFT JOIN overall_types ot  ON ot.id = o.ov_type_id
+LEFT JOIN applicants a      ON a.id = o.applicant_id
+LEFT JOIN departament d     ON d.id = o.departament_id
+LEFT JOIN states s          ON a.state_id = s.id
+LEFT JOIN cities ci         ON ci.id = a.city_id
+LEFT JOIN obj_mrnti om      ON o.id = om.obj_id
+
+WHERE o.status = 11
+  AND o.obj_type_id NOT IN (3, 5)
+  AND o1.status IN (10, 11)
+
+GROUP BY pr.name_ru

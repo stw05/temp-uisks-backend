@@ -1,0 +1,31 @@
+SELECT
+o.number AS 'ИРН',
+o.topiceng AS 'Название проекта',
+a.name as 'Заявитель',
+pr.name_en AS 'Приоритет',
+ct.name AS 'Тип финансирования',
+b.request_total AS 'Сумма финансирования (запр)', -- запрашиваемая
+b.accept_total AS 'Сумма финансирования (одобр)', -- одобренная
+CASE 
+        WHEN ci.city IN ('Алматы', 'Almaty') THEN 'Almay city'
+        WHEN ci.city IN ('Астана', 'Астана (Нур-Султан)', 'Nur-Sultan', 'Astana') THEN 'Astana city'
+        WHEN ci.city IN ('Шымкент', 'Shymkent') THEN 'Shymkent city'
+        WHEN ci.city IN ('Семей', 'Semey') THEN 'Abai region'
+        WHEN ci.city IN ('Жезказган', 'Zhezkazgan') THEN 'Ulytau region'
+        WHEN ci.city IN ('Талдыкорган', 'Taldykorgan') THEN 'Zhetisu region'
+        ELSE s.name_en
+    END AS 'Регион заявителя',
+os.name_en AS 'статус',
+CONCAT_WS('-',year(o.year_b),year(o.year_e)) AS 'Период'
+
+
+from obj_main o
+LEFT JOIN applicants a on a.id=o.applicant_id
+LEFT join obj_priorities op on op.obj_id=o.id
+LEFT JOIN priorities pr on pr.id=op.priority_id
+LEFT JOIN competition_types ct ON o.comp_type_id = ct.id
+LEFT JOIN budget b ON o.id = b.obj_id
+LEFT JOIN states s ON a.state_id = s.id
+LEFT join cities ci ON ci.id=a.city_id
+LEFT join obj_status os ON o.status = os.id 
+

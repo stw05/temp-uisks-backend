@@ -1,0 +1,4 @@
+SELECT DISTINCT
+p.academic_title
+
+FROM persons p

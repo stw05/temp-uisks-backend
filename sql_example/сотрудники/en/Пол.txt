@@ -1,0 +1,4 @@
+SELECT DISTINCT
+CASE WHEN p.sex=1 THEN 'Man' END AS 'Мужской',
+CASE WHEN p.sex=2 THEN 'Woman' END AS 'Женский'
+FROM persons p
