@@ -12,6 +12,8 @@ const sanitizeSegment = (value: string): string => {
 };
 
 export class FileSystemSqlTemplateRepository implements SqlTemplateRepository {
+  private readonly templateCache = new Map<string, string>();
+
   constructor(private readonly baseDir: string) {}
 
   async readTemplate(location: SqlTemplateLocation): Promise<string> {
@@ -24,8 +26,15 @@ export class FileSystemSqlTemplateRepository implements SqlTemplateRepository {
       throw new AppError("Invalid SQL template path", 400);
     }
 
+    const cached = this.templateCache.get(filePath);
+    if (cached !== undefined) {
+      return cached;
+    }
+
     try {
-      return await fs.readFile(filePath, "utf8");
+      const sql = await fs.readFile(filePath, "utf8");
+      this.templateCache.set(filePath, sql);
+      return sql;
     } catch {
       throw new AppError("SQL template not found", 404);
     }
