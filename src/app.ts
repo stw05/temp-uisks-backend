@@ -26,6 +26,7 @@ import { buildDashboardRoutes } from "./api/routes/dashboardRoutes";
 import { InMemoryTokenBlacklist } from "./infrastructure/services/InMemoryTokenBlacklist";
 import { openApiSpec } from "./api/docs/openapi";
 import { DashboardService } from "./application/use-cases/dashboard/DashboardService";
+import { PostgresProjectRepository } from "./infrastructure/repositories/postgres/PostgresProjectRepository";
 
 export const buildApp = (): express.Express => {
   const app = express();
@@ -45,11 +46,13 @@ export const buildApp = (): express.Express => {
   const registerUserUseCase = new RegisterUserUseCase(userRepository, passwordService, jwtService);
   const loginUserUseCase = new LoginUserUseCase(userRepository, passwordService, jwtService);
 
-  const { projectRepository, employeeRepository, publicationRepository, financeRepository } = createLegacyRepositories(
+  const { employeeRepository, publicationRepository, financeRepository } = createLegacyRepositories(
     appDbPool,
     sqlTemplateRepository,
     env.APP_DB_LOCALE
   );
+
+  const projectRepository = new PostgresProjectRepository(usersDbPool, env.USERS_PROJECTS_TABLE);
 
   const projectService = new ProjectService(projectRepository);
   const employeeService = new EmployeeService(employeeRepository);

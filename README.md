@@ -7,6 +7,7 @@
 - **2 базы данных**:
   - `APP_DB_*` — существующая основная БД проекта (**MySQL**, чтение аналитических данных)
   - `USERS_DB_*` — отдельная БД пользователей (**PostgreSQL**, поднимается через `docker-compose`)
+- Проекты (`/api/projects`) читаются из таблицы `USERS_PROJECTS_TABLE` в `users_db`
 - Аутентификация с ролями: `admin`, `staff`, `viewer`
 - API по сущностям: `projects`, `employees`, `publications`, `finances`
 - SQL-шаблоны (`sql_example`) используются как read-модель для основной БД
@@ -27,6 +28,32 @@ docker compose up -d
 npm install
 npm run dev
 ```
+
+## Импорт `project.xlsx` в `users_db`
+
+1. Убедитесь, что `users-db` поднят:
+
+```bash
+docker compose up -d users-db
+```
+
+2. В `.env` задайте таблицу проектов (по умолчанию `projects`):
+
+```dotenv
+USERS_PROJECTS_TABLE=projects
+```
+
+3. Загрузите Excel в PostgreSQL:
+
+```bash
+npm run import:projects:xlsx -- /absolute/path/to/project.xlsx --truncate
+```
+
+Опции:
+- `--truncate` — очистить таблицу перед импортом
+- `--sheet <имя_листа>` — импортировать конкретный лист (иначе берется первый)
+
+После импорта API `GET /api/projects` читает данные из `users_db`.
 
 ## Swagger
 
@@ -87,5 +114,5 @@ npm run dev
 
 ## Временные ограничения текущей версии
 
-- Чтение данных идет из SQL-шаблонов и основной MySQL БД.
+- `projects` читаются из PostgreSQL (`users_db`), остальные домены пока из SQL-шаблонов и основной MySQL БД.
 - Admin CRUD для проектов/сотрудников/публикаций реализован как **временный in-memory слой**, чтобы фронт работал по контракту до миграции на полноценные Go-сервисы и нормальные write-model таблицы.
