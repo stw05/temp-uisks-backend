@@ -60,16 +60,16 @@ export const buildApp = (): express.Express => {
   const financeService = new FinanceService(financeRepository, projectRepository);
   const dashboardService = new DashboardService(projectRepository);
 
-  app.use("/api", healthRoutes);
+  app.use("/api/v1", healthRoutes);
   app.use(
-    "/api/auth",
+    "/api/v1/auth",
     buildAuthRoutes(registerUserUseCase, loginUserUseCase, jwtService, tokenBlacklist, userRepository)
   );
-  app.use("/api/projects", buildProjectRoutes(projectService, jwtService, tokenBlacklist));
-  app.use("/api/employees", buildEmployeeRoutes(employeeService, jwtService, tokenBlacklist));
-  app.use("/api/publications", buildPublicationRoutes(publicationService, jwtService, tokenBlacklist));
-  app.use("/api/finances", buildFinanceRoutes(financeService, jwtService, tokenBlacklist));
-  app.use("/api/dashboard", buildDashboardRoutes(dashboardService));
+  app.use("/api/v1/projects", buildProjectRoutes(projectService, jwtService, tokenBlacklist));
+  app.use("/api/v1/employees", buildEmployeeRoutes(employeeService, jwtService, tokenBlacklist));
+  app.use("/api/v1/publications", buildPublicationRoutes(publicationService, jwtService, tokenBlacklist));
+  app.use("/api/v1/finances", buildFinanceRoutes(financeService, jwtService, tokenBlacklist));
+  app.use("/api/v1/dashboard", buildDashboardRoutes(dashboardService));
 
   app.use((error: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
     const httpError = toHttpError(error);
