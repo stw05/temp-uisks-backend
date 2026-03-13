@@ -1,3 +1,0 @@
-SELECT
-a.name
-FROM applicants a

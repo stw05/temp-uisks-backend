@@ -1,5 +1,0 @@
-SELECT DISTINCT
-sf.name_ru
-FROM science_fields sf 
-                    
-

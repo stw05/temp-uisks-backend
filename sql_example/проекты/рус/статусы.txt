@@ -1,3 +1,0 @@
-SELECT
-os.name_ru
-FROM obj_status os

@@ -1,3 +1,0 @@
-SELECT DISTINCT
-ar.relation
-from applicant_relation ar

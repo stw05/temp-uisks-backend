@@ -1,3 +1,0 @@
-SELECT
-d.name_kz
-from departament d

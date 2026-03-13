@@ -1,3 +1,0 @@
-SELECT
-ct.name
-FROM competition_types ct

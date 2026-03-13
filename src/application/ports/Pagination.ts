@@ -24,7 +24,7 @@ export interface PaginatedResult<T> {
 
 export const DEFAULT_PAGE = 1;
 export const DEFAULT_LIMIT = 20;
-export const MAX_LIMIT = 100;
+export const MAX_LIMIT = 10000;
 
 const toPositiveInteger = (value: number | undefined): number | undefined => {
   if (typeof value !== "number" || !Number.isFinite(value)) {

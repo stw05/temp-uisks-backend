@@ -1,3 +1,0 @@
-SELECT
-a.name_kz
-FROM applicants a

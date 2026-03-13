@@ -11,8 +11,11 @@ CREATE TABLE IF NOT EXISTS projects (
   priority TEXT NULL,
   financing_type TEXT NULL,
   tags TEXT NULL,
+  excel_data JSONB NOT NULL DEFAULT '{}'::jsonb,
+  source_ref TEXT NULL,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE INDEX IF NOT EXISTS idx_projects_status ON projects(status);
 CREATE INDEX IF NOT EXISTS idx_projects_region ON projects(region);
+CREATE INDEX IF NOT EXISTS idx_projects_excel_data_gin ON projects USING GIN (excel_data);

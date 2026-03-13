@@ -1,3 +1,0 @@
-SELECT
-d.name_ru
-from departament d

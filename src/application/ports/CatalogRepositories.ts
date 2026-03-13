@@ -11,12 +11,29 @@ export type ProjectListFilters = {
   financingType?: string;
   priority?: string;
   applicant?: string;
+  contest?: string;
+  customer?: string;
+  mrnti?: string;
+  trl?: number;
+  startYear?: number;
+  endYear?: number;
   q?: string;
 } & PaginationInput;
 
 export type EmployeeListFilters = {
+  searchTerm?: string;
   region?: string;
   position?: string;
+  department?: string;
+  minAge?: number;
+  maxAge?: number;
+  affiliateType?: string;
+  gender?: string;
+  citizenship?: string;
+  projectRole?: string;
+  hIndexGroup?: string;
+  mrnti?: string;
+  classifier?: string;
   degree?: string;
   minHIndex?: number;
   maxHIndex?: number;
@@ -36,6 +53,8 @@ export interface ProjectFilterOptions {
   financingType: string[];
   priority: string[];
   applicant: string[];
+  contest: string[];
+  customer: string[];
   mrnti: string[];
   trl: string[];
 }
@@ -57,20 +76,44 @@ export interface ProjectFilterMeta {
   financingType: FilterOptionCountString[];
   priority: FilterOptionCountString[];
   applicant: FilterOptionCountString[];
+  contest: FilterOptionCountString[];
+  customer: FilterOptionCountString[];
   mrnti: FilterOptionCountString[];
   trl: FilterOptionCountString[];
 }
 
 export interface EmployeeFilterOptions {
+  searchTerm: string[];
   region: string[];
   position: string[];
+  department: string[];
+  affiliateType: string[];
+  gender: string[];
   degree: string[];
+  citizenship: string[];
+  projectRole: string[];
+  hIndexGroup: string[];
+  mrnti: string[];
+  classifier: string[];
+  minAge: number;
+  maxAge: number;
 }
 
 export interface EmployeeFilterMeta {
+  searchTerm: FilterOptionCountString[];
   region: FilterOptionCountString[];
   position: FilterOptionCountString[];
+  department: FilterOptionCountString[];
+  affiliateType: FilterOptionCountString[];
+  gender: FilterOptionCountString[];
   degree: FilterOptionCountString[];
+  citizenship: FilterOptionCountString[];
+  projectRole: FilterOptionCountString[];
+  hIndexGroup: FilterOptionCountString[];
+  mrnti: FilterOptionCountString[];
+  classifier: FilterOptionCountString[];
+  minAge: number;
+  maxAge: number;
 }
 
 export interface PublicationFilterOptions {

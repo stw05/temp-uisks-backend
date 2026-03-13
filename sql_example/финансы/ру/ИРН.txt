@@ -1,3 +1,0 @@
-SELECT
-o.number
-FROM obj_main o 

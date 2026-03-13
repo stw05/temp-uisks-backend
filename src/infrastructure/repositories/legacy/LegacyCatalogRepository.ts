@@ -37,6 +37,43 @@ const isSame = (left: string, right: string): boolean => normalize(left) === nor
 
 const contains = (source: string, needle: string): boolean => normalize(source).includes(normalize(needle));
 
+const cleanText = (value: unknown, fallback = "Не указано"): string => {
+  const text = toStringValue(value);
+  return text || fallback;
+};
+
+const normalizeRegion = (value: string): string =>
+  normalize(value)
+    .replace(/[.,]/g, " ")
+    .replace(/(^|\s)(город|г|область|обл|обл\.)(\s|$)/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+const matchesRegion = (source: string, filter: string): boolean => {
+  const left = normalizeRegion(source);
+  const right = normalizeRegion(filter);
+  if (!left || !right) {
+    return false;
+  }
+  return left.includes(right) || right.includes(left);
+};
+
+const toHIndexGroup = (hIndex: number): string => {
+  if (!Number.isFinite(hIndex) || hIndex <= 0) {
+    return "0";
+  }
+  if (hIndex <= 2) {
+    return "1-2";
+  }
+  if (hIndex <= 5) {
+    return "3-5";
+  }
+  if (hIndex <= 10) {
+    return "6-10";
+  }
+  return "11+";
+};
+
 const sortUniqueStrings = (values: string[]): string[] => Array.from(new Set(values.filter(Boolean))).sort((a, b) => a.localeCompare(b));
 
 const firstStringValue = (row: Record<string, unknown>): string => {
@@ -110,6 +147,11 @@ class LegacySqlReader {
     return rowsFromMySqlResult(rows);
   }
 
+  async executeRaw(sql: string): Promise<Array<Record<string, unknown>>> {
+    const [rows] = await this.appDbPool.query(sql);
+    return rowsFromMySqlResult(rows);
+  }
+
   projectsLocale(): string {
     return this.appLocale;
   }
@@ -175,6 +217,8 @@ export class LegacyProjectRepository implements ProjectRepository {
     const financingType = sortUniqueStrings(projects.flatMap((project) => project.tags.slice(1, 2)));
     const priority = sortUniqueStrings(projects.flatMap((project) => project.tags.slice(0, 1)));
     const applicant = sortUniqueStrings(projects.map((project) => project.lead));
+    const contest = sortUniqueStrings(projects.map((project) => project.contest ?? "").filter(Boolean));
+    const customer = sortUniqueStrings(projects.map((project) => project.customer ?? "").filter(Boolean));
 
     const mrnti = await collectSqlValues("МРНТИ.txt");
     const trl = await collectSqlValues("ТРЛ.txt");
@@ -186,6 +230,8 @@ export class LegacyProjectRepository implements ProjectRepository {
       financingType,
       priority,
       applicant,
+      contest,
+      customer,
       mrnti,
       trl
     };
@@ -209,6 +255,8 @@ export class LegacyProjectRepository implements ProjectRepository {
       financingType: toCountedStrings(projects.flatMap((project) => project.tags.slice(1, 2))),
       priority: toCountedStrings(projects.flatMap((project) => project.tags.slice(0, 1))),
       applicant: toCountedStrings(projects.map((project) => project.lead)),
+      contest: toCountedStrings(projects.map((project) => project.contest ?? "").filter(Boolean)),
+      customer: toCountedStrings(projects.map((project) => project.customer ?? "").filter(Boolean)),
       mrnti: await collectSqlValues("МРНТИ.txt"),
       trl: await collectSqlValues("ТРЛ.txt")
     };
@@ -317,6 +365,7 @@ export class LegacyProjectRepository implements ProjectRepository {
 export class LegacyEmployeeRepository implements EmployeeRepository {
   private readonly localEmployees = new Map<string, Employee>();
   private readonly deletedEmployeeIds = new Set<string>();
+  private personsColumnsCache: Set<string> | null = null;
 
   constructor(private readonly reader: LegacySqlReader) {}
 
@@ -328,68 +377,259 @@ export class LegacyEmployeeRepository implements EmployeeRepository {
   async getFilters(): Promise<EmployeeFilterOptions> {
     const employees = await this.listAll({});
 
+    const ages = employees.map((employee) => toNumber(employee.metrics["age"])).filter((value) => Number.isFinite(value) && value > 0);
+
     return {
+      searchTerm: sortUniqueStrings(employees.map((employee) => employee.name)),
       region: sortUniqueStrings(employees.map((employee) => employee.region)),
       position: sortUniqueStrings(employees.map((employee) => employee.position)),
-      degree: sortUniqueStrings(employees.map((employee) => toStringValue(employee.metrics["academicDegree"])))
+      department: sortUniqueStrings(employees.map((employee) => employee.department)),
+      affiliateType: sortUniqueStrings(employees.map((employee) => toStringValue(employee.metrics["affiliateType"]))),
+      gender: sortUniqueStrings(employees.map((employee) => toStringValue(employee.metrics["gender"]))),
+      degree: sortUniqueStrings(employees.map((employee) => toStringValue(employee.metrics["academicDegree"]))),
+      citizenship: sortUniqueStrings(employees.map((employee) => toStringValue(employee.metrics["citizenship"]))),
+      projectRole: sortUniqueStrings(employees.map((employee) => toStringValue(employee.metrics["projectRole"]))),
+      hIndexGroup: sortUniqueStrings(employees.map((employee) => toStringValue(employee.metrics["hIndexGroup"]))),
+      mrnti: sortUniqueStrings(employees.map((employee) => toStringValue(employee.metrics["mrnti"]))),
+      classifier: sortUniqueStrings(employees.map((employee) => toStringValue(employee.metrics["classifier"]))),
+      minAge: ages.length ? Math.min(...ages) : 0,
+      maxAge: ages.length ? Math.max(...ages) : 0
     };
   }
 
   async getFilterMeta(filters: EmployeeListFilters): Promise<EmployeeFilterMeta> {
     const employees = await this.listAll(filters);
+
+    const ages = employees.map((employee) => toNumber(employee.metrics["age"])).filter((value) => Number.isFinite(value) && value > 0);
+
     return {
+      searchTerm: toCountedStrings(employees.map((employee) => employee.name)),
       region: toCountedStrings(employees.map((employee) => employee.region)),
       position: toCountedStrings(employees.map((employee) => employee.position)),
-      degree: toCountedStrings(employees.map((employee) => toStringValue(employee.metrics["academicDegree"])))
+      department: toCountedStrings(employees.map((employee) => employee.department)),
+      affiliateType: toCountedStrings(employees.map((employee) => toStringValue(employee.metrics["affiliateType"]))),
+      gender: toCountedStrings(employees.map((employee) => toStringValue(employee.metrics["gender"]))),
+      degree: toCountedStrings(employees.map((employee) => toStringValue(employee.metrics["academicDegree"]))),
+      citizenship: toCountedStrings(employees.map((employee) => toStringValue(employee.metrics["citizenship"]))),
+      projectRole: toCountedStrings(employees.map((employee) => toStringValue(employee.metrics["projectRole"]))),
+      hIndexGroup: toCountedStrings(employees.map((employee) => toStringValue(employee.metrics["hIndexGroup"]))),
+      mrnti: toCountedStrings(employees.map((employee) => toStringValue(employee.metrics["mrnti"]))),
+      classifier: toCountedStrings(employees.map((employee) => toStringValue(employee.metrics["classifier"]))),
+      minAge: ages.length ? Math.min(...ages) : 0,
+      maxAge: ages.length ? Math.max(...ages) : 0
     };
   }
 
+  private async getPersonsColumns(): Promise<Set<string>> {
+    if (this.personsColumnsCache) {
+      return this.personsColumnsCache;
+    }
+
+    const rows = await this.reader.executeRaw("SHOW COLUMNS FROM persons");
+    this.personsColumnsCache = new Set(rows.map((row) => toStringValue(row["Field"])).filter(Boolean));
+    return this.personsColumnsCache;
+  }
+
+  private pickPersonsColumn(columns: Set<string>, candidates: string[], alias: string): string {
+    const matched = candidates.find((candidate) => columns.has(candidate));
+    if (!matched) {
+      return `'' AS \`${alias}\``;
+    }
+
+    return `COALESCE(CAST(p.\`${matched}\` AS CHAR), '') AS \`${alias}\``;
+  }
+
+  private buildEmployeesSql(columns: Set<string>): string {
+    const statusExpr = this.pickPersonsColumn(columns, ["status", "verification_status"], "status_raw");
+    const confirmedFlagExpr = columns.has("is_confirmed")
+      ? "COALESCE(p.`is_confirmed`, 0) AS `confirmed_flag`"
+      : columns.has("confirmed")
+        ? "COALESCE(p.`confirmed`, 0) AS `confirmed_flag`"
+        : "0 AS `confirmed_flag`";
+
+    const confirmedConditions: string[] = [];
+    if (columns.has("is_confirmed")) {
+      confirmedConditions.push("COALESCE(p.`is_confirmed`, 0) = 1");
+    }
+    if (columns.has("confirmed")) {
+      confirmedConditions.push("COALESCE(p.`confirmed`, 0) = 1");
+    }
+    if (columns.has("status")) {
+      confirmedConditions.push(
+        "LOWER(COALESCE(CAST(p.`status` AS CHAR), '')) IN ('confirmed','подтвержденный','подтверждённый','подтверждено','подтвержден')"
+      );
+    }
+    if (columns.has("verification_status")) {
+      confirmedConditions.push(
+        "LOWER(COALESCE(CAST(p.`verification_status` AS CHAR), '')) IN ('confirmed','подтвержденный','подтверждённый','подтверждено','подтвержден')"
+      );
+    }
+
+    const whereClause = confirmedConditions.length > 0 ? `WHERE (${confirmedConditions.join(" OR ")})` : "";
+
+    return `
+      SELECT
+        CONCAT_WS(' ', pa.sname, pa.fname, pa.pname) AS 'ФИО',
+        COALESCE(CAST(p.academic_title AS CHAR), '') AS 'Ученое звание',
+        COALESCE(CAST(p.academic_degree AS CHAR), '') AS 'Ученая степень',
+        COALESCE(CAST(p.scopus AS CHAR), '') AS 'Author ID SCOPUS',
+        COALESCE(CAST(p.webofscience AS CHAR), '') AS 'Researcher ID web of science',
+        COALESCE(CAST(p.orcid AS CHAR), '') AS 'ORCID ID',
+        COALESCE(psi.hindex, 0) AS 'H-index',
+        CASE
+          WHEN ci.city IN ('Алматы', 'Almaty') THEN 'г. Алматы'
+          WHEN ci.city IN ('Астана', 'Астана (Нур-Султан)', 'Nur-Sultan', 'Astana') THEN 'г. Астана'
+          WHEN ci.city IN ('Шымкент', 'Shymkent') THEN 'г. Шымкент'
+          WHEN ci.city IN ('Семей', 'Semey') THEN 'Абайская область'
+          WHEN ci.city IN ('Жезказган', 'Zhezkazgan') THEN 'Улытауская область'
+          WHEN ci.city IN ('Талдыкорган', 'Taldykorgan') THEN 'Жетысуская область'
+          ELSE COALESCE(CAST(s.name AS CHAR), '')
+        END AS 'Регион',
+        TIMESTAMPDIFF(YEAR, p.birthday, CURDATE()) AS 'old',
+        ${this.pickPersonsColumn(columns, ["department", "department_name"], "department")},
+        ${this.pickPersonsColumn(columns, ["affiliate_type", "organization_type", "affiliateType"], "affiliate_type")},
+        ${this.pickPersonsColumn(columns, ["gender", "sex"], "gender")},
+        ${this.pickPersonsColumn(columns, ["citizenship", "country"], "citizenship")},
+        ${this.pickPersonsColumn(columns, ["project_role", "role"], "project_role")},
+        ${this.pickPersonsColumn(columns, ["mrnti"], "mrnti")},
+        ${this.pickPersonsColumn(columns, ["classifier", "classificator"], "classifier")},
+        ${this.pickPersonsColumn(columns, ["email"], "email")},
+        ${this.pickPersonsColumn(columns, ["phone", "mobile"], "phone")},
+        ${statusExpr},
+        ${confirmedFlagExpr}
+      FROM persons p
+      LEFT JOIN persons_all pa ON pa.main_user_id = p.main_user_id
+      LEFT JOIN states s ON s.id = p.state_id
+      LEFT JOIN cities ci ON ci.id = p.city_id
+      LEFT JOIN person_scopus_info psi ON psi.person_id = p.id
+      ${whereClause}
+    `;
+  }
+
   private async listAll(filters: {
+    searchTerm?: string;
     region?: string;
     position?: string;
+    department?: string;
+    minAge?: number;
+    maxAge?: number;
+    affiliateType?: string;
+    gender?: string;
+    citizenship?: string;
+    projectRole?: string;
+    hIndexGroup?: string;
+    mrnti?: string;
+    classifier?: string;
     degree?: string;
     minHIndex?: number;
     maxHIndex?: number;
     q?: string;
   }): Promise<Employee[]> {
-    const rows = await this.reader.execute("сотрудники", this.reader.employeesLocale(), "общий.txt");
+    const personsColumns = await this.getPersonsColumns();
+    const rows = await this.reader.executeRaw(this.buildEmployeesSql(personsColumns));
 
-    const base = rows.map((row) => {
+    const hasConfirmedColumns =
+      personsColumns.has("is_confirmed") ||
+      personsColumns.has("confirmed") ||
+      personsColumns.has("status") ||
+      personsColumns.has("verification_status");
+
+    const base: Employee[] = [];
+    for (const row of rows) {
       const name = toStringValue(row["ФИО"]);
-      const region = toStringValue(row["Регион"]);
+      const region = cleanText(row["Регион"]);
 
-      const academicTitle = toStringValue(row["Ученое звание"]);
-      const academicDegree = toStringValue(row["Ученая степень"]);
+      const statusRaw = normalize(toStringValue(row["status_raw"]));
+      const confirmedByStatus = ["confirmed", "подтвержденный", "подтверждённый", "подтверждено", "подтвержден"].some((value) =>
+        statusRaw.includes(value)
+      );
+      const confirmedByFlag = toNumber(row["confirmed_flag"]) === 1;
+
+      if (hasConfirmedColumns && !(confirmedByStatus || confirmedByFlag)) {
+        continue;
+      }
+
+      if (!name) {
+        continue;
+      }
+
+      const academicTitle = cleanText(row["Ученое звание"]);
+      const academicDegree = cleanText(row["Ученая степень"]);
       const hIndex = toNumber(row["H-index"]);
+      const age = Math.max(toNumber(row["old"]), 0);
+      const department = cleanText(row["department"]);
+      const affiliateType = cleanText(row["affiliate_type"]);
+      const gender = cleanText(row["gender"]);
+      const citizenship = cleanText(row["citizenship"]);
+      const projectRole = cleanText(row["project_role"]);
+      const mrnti = cleanText(row["mrnti"]);
+      const classifier = cleanText(row["classifier"]);
+      const email = cleanText(row["email"]);
+      const phone = cleanText(row["phone"]);
+      const hIndexGroup = toHIndexGroup(hIndex);
 
-      return {
+      base.push({
         id: stableId("employee", `${name}-${region}`),
         name,
         position: academicTitle,
-        department: "",
+        department,
         region,
-        email: "",
-        phone: "",
-        avatarUrl: "",
+        email,
+        phone,
+        avatarUrl: "Не указано",
         projectsIds: [],
         metrics: {
           hIndex,
           academicDegree,
-          scopusAuthorId: toStringValue(row["Author ID SCOPUS"]),
-          researcherIdWos: toStringValue(row["Researcher ID web of science"]),
-          orcid: toStringValue(row["ORCID ID"]),
-          age: toNumber(row["old"])
+          scopusAuthorId: cleanText(row["Author ID SCOPUS"]),
+          researcherIdWos: cleanText(row["Researcher ID web of science"]),
+          orcid: cleanText(row["ORCID ID"]),
+          age,
+          affiliateType,
+          gender,
+          citizenship,
+          projectRole,
+          hIndexGroup,
+          mrnti,
+          classifier,
+          status: "подтвержденный"
         },
-        bio: "",
+        bio: "Не указано",
         publicationsIds: []
-      } satisfies Employee;
-    });
+      } satisfies Employee);
+    }
+
+    const searchTerm = filters.searchTerm ?? filters.q;
 
     return withOverlay(base, this.localEmployees, this.deletedEmployeeIds).filter((employee) => {
-      if (filters.region && !contains(employee.region, filters.region)) {
+      if (filters.region && !matchesRegion(employee.region, filters.region)) {
         return false;
       }
-      if (filters.position && !isSame(employee.position, filters.position)) {
+      if (filters.position && !contains(employee.position, filters.position)) {
+        return false;
+      }
+      if (filters.department && !contains(employee.department, filters.department)) {
+        return false;
+      }
+      if (filters.affiliateType && !contains(toStringValue(employee.metrics["affiliateType"]), filters.affiliateType)) {
+        return false;
+      }
+      if (filters.gender && !contains(toStringValue(employee.metrics["gender"]), filters.gender)) {
+        return false;
+      }
+      if (filters.citizenship && !contains(toStringValue(employee.metrics["citizenship"]), filters.citizenship)) {
+        return false;
+      }
+      if (filters.projectRole && !contains(toStringValue(employee.metrics["projectRole"]), filters.projectRole)) {
+        return false;
+      }
+      if (filters.hIndexGroup && !isSame(toStringValue(employee.metrics["hIndexGroup"]), filters.hIndexGroup)) {
+        return false;
+      }
+      if (filters.mrnti && !contains(toStringValue(employee.metrics["mrnti"]), filters.mrnti)) {
+        return false;
+      }
+      if (filters.classifier && !contains(toStringValue(employee.metrics["classifier"]), filters.classifier)) {
         return false;
       }
       if (filters.degree) {
@@ -408,6 +648,13 @@ export class LegacyEmployeeRepository implements EmployeeRepository {
           return false;
         }
       }
+      const age = toNumber(employee.metrics["age"]);
+      if (filters.minAge !== undefined && age < filters.minAge) {
+        return false;
+      }
+      if (filters.maxAge !== undefined && age > filters.maxAge) {
+        return false;
+      }
       const hIndex = toNumber(employee.metrics["hIndex"]);
       if (filters.minHIndex !== undefined && hIndex < filters.minHIndex) {
         return false;
@@ -415,8 +662,11 @@ export class LegacyEmployeeRepository implements EmployeeRepository {
       if (filters.maxHIndex !== undefined && hIndex > filters.maxHIndex) {
         return false;
       }
-      if (filters.q) {
-        return contains(`${employee.name} ${employee.position}`, filters.q);
+      if (searchTerm) {
+        return contains(
+          `${employee.name} ${employee.position} ${employee.department} ${toStringValue(employee.metrics["mrnti"])} ${toStringValue(employee.metrics["classifier"])} ${toStringValue(employee.metrics["projectRole"])}`,
+          searchTerm
+        );
       }
       return true;
     });

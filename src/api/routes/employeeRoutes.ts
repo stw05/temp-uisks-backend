@@ -20,13 +20,26 @@ export const buildEmployeeRoutes = (
       const pagination = readPaginationFromQuery(req);
       const minHIndexRaw = req.query.minHIndex ? Number(req.query.minHIndex) : undefined;
       const maxHIndexRaw = req.query.maxHIndex ? Number(req.query.maxHIndex) : undefined;
+      const minAgeRaw = req.query.minAge ? Number(req.query.minAge) : undefined;
+      const maxAgeRaw = req.query.maxAge ? Number(req.query.maxAge) : undefined;
       const employees = await employeeService.list({
+        searchTerm: req.query.searchTerm?.toString(),
         region: req.query.region?.toString(),
         position: req.query.position?.toString(),
+        department: req.query.department?.toString(),
+        minAge: Number.isFinite(minAgeRaw) ? minAgeRaw : undefined,
+        maxAge: Number.isFinite(maxAgeRaw) ? maxAgeRaw : undefined,
+        affiliateType: req.query.affiliateType?.toString(),
+        gender: req.query.gender?.toString(),
+        citizenship: req.query.citizenship?.toString(),
+        projectRole: req.query.projectRole?.toString(),
+        hIndexGroup: req.query.hIndexGroup?.toString(),
+        mrnti: req.query.mrnti?.toString(),
+        classifier: req.query.classifier?.toString(),
         degree: req.query.degree?.toString(),
         minHIndex: Number.isFinite(minHIndexRaw) ? minHIndexRaw : undefined,
         maxHIndex: Number.isFinite(maxHIndexRaw) ? maxHIndexRaw : undefined,
-        q: req.query.q?.toString(),
+        q: req.query.q?.toString() ?? req.query.searchTerm?.toString(),
         ...pagination
       });
       res.status(200).json(employees);
@@ -46,13 +59,26 @@ export const buildEmployeeRoutes = (
     asyncHandler(async (req, res) => {
       const minHIndexRaw = req.query.minHIndex ? Number(req.query.minHIndex) : undefined;
       const maxHIndexRaw = req.query.maxHIndex ? Number(req.query.maxHIndex) : undefined;
+      const minAgeRaw = req.query.minAge ? Number(req.query.minAge) : undefined;
+      const maxAgeRaw = req.query.maxAge ? Number(req.query.maxAge) : undefined;
       const filters = await employeeService.getFilterMeta({
+        searchTerm: req.query.searchTerm?.toString(),
         region: req.query.region?.toString(),
         position: req.query.position?.toString(),
+        department: req.query.department?.toString(),
+        minAge: Number.isFinite(minAgeRaw) ? minAgeRaw : undefined,
+        maxAge: Number.isFinite(maxAgeRaw) ? maxAgeRaw : undefined,
+        affiliateType: req.query.affiliateType?.toString(),
+        gender: req.query.gender?.toString(),
+        citizenship: req.query.citizenship?.toString(),
+        projectRole: req.query.projectRole?.toString(),
+        hIndexGroup: req.query.hIndexGroup?.toString(),
+        mrnti: req.query.mrnti?.toString(),
+        classifier: req.query.classifier?.toString(),
         degree: req.query.degree?.toString(),
         minHIndex: Number.isFinite(minHIndexRaw) ? minHIndexRaw : undefined,
         maxHIndex: Number.isFinite(maxHIndexRaw) ? maxHIndexRaw : undefined,
-        q: req.query.q?.toString()
+        q: req.query.q?.toString() ?? req.query.searchTerm?.toString()
       });
       res.status(200).json(filters);
     })

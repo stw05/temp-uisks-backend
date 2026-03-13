@@ -1,3 +1,0 @@
-SELECT
-os.name_en
-FROM obj_status os

@@ -14,6 +14,53 @@ export const buildPublicationRoutes = (
 ): Router => {
   const router = Router();
 
+  const readAnalyticsFilters = (query: Record<string, unknown>) => {
+    const yearFromRaw = query.yearFrom ? Number(query.yearFrom) : undefined;
+    const yearToRaw = query.yearTo ? Number(query.yearTo) : undefined;
+    const trlRaw = query.trl ? Number(query.trl) : undefined;
+
+    return {
+      region: query.region?.toString(),
+      yearFrom: Number.isFinite(yearFromRaw) ? yearFromRaw : undefined,
+      yearTo: Number.isFinite(yearToRaw) ? yearToRaw : undefined,
+      irn: query.irn?.toString(),
+      financingType: query.financingType?.toString(),
+      priority: query.priority?.toString(),
+      contest: query.contest?.toString(),
+      applicant: query.applicant?.toString(),
+      customer: query.customer?.toString(),
+      mrnti: query.mrnti?.toString(),
+      status: query.status?.toString(),
+      trl: Number.isFinite(trlRaw) ? trlRaw : undefined
+    };
+  };
+
+  router.get(
+    "/summary",
+    asyncHandler(async (req, res) => {
+      const summary = await publicationService.getSummary(readAnalyticsFilters(req.query as Record<string, unknown>));
+      res.status(200).json(summary);
+    })
+  );
+
+  router.get(
+    "/timeseries",
+    asyncHandler(async (req, res) => {
+      const timeseries = await publicationService.getTimeseries(readAnalyticsFilters(req.query as Record<string, unknown>));
+      res.status(200).json(timeseries);
+    })
+  );
+
+  router.get(
+    "/distributions",
+    asyncHandler(async (req, res) => {
+      const distributions = await publicationService.getDistributions(
+        readAnalyticsFilters(req.query as Record<string, unknown>)
+      );
+      res.status(200).json(distributions);
+    })
+  );
+
   router.get(
     "/",
     asyncHandler(async (req, res) => {

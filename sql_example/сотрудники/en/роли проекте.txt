@@ -1,4 +1,0 @@
-SELECT
-pp.name_en
-
-FROM person_position pp

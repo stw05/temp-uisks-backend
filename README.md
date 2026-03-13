@@ -29,7 +29,7 @@ npm install
 npm run dev
 ```
 
-## Импорт `project.xlsx` в `users_db`
+## Импорт Excel с конкурсами/проектами в `users_db`
 
 1. Убедитесь, что `users-db` поднят:
 
@@ -43,15 +43,29 @@ docker compose up -d users-db
 USERS_PROJECTS_TABLE=projects
 ```
 
-3. Загрузите Excel в PostgreSQL:
+3. Загрузите один или несколько Excel-файлов в PostgreSQL:
 
 ```bash
-npm run import:projects:xlsx -- /absolute/path/to/project.xlsx --truncate
+npm run import:projects:xlsx -- /absolute/path/to/file1.xlsx /absolute/path/to/file2.xlsx /absolute/path/to/file3.xlsx /absolute/path/to/file4.xlsx --truncate
+```
+
+Можно передать папку — будут импортированы все `.xlsx/.xls/.xlsm` внутри:
+
+```bash
+npm run import:projects:xlsx -- /absolute/path/to/excel-folder --truncate
 ```
 
 Опции:
 - `--truncate` — очистить таблицу перед импортом
-- `--sheet <имя_листа>` — импортировать конкретный лист (иначе берется первый)
+- `--sheet <имя_листа>` — импортировать конкретный лист (во всех переданных файлах)
+- `--all-sheets` — импортировать все листы в каждом файле
+
+Что делает импорт "умно":
+- автоматически ищет строку заголовков (даже если она не первая)
+- поддерживает разные варианты названий колонок (RU/EN)
+- нормализует даты/числа и статус проекта
+- объединяет дубликаты по `id` (если одна и та же запись встречается в нескольких файлах)
+- сохраняет все исходные столбцы Excel в `projects.excel_data` (`JSONB`) для расширенной статистики
 
 После импорта API `GET /api/projects` читает данные из `users_db`.
 

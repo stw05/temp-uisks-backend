@@ -16,9 +16,90 @@ export const buildFinanceRoutes = (
   router.get(
     "/summary",
     asyncHandler(async (req, res) => {
-      const year = req.query.year ? Number(req.query.year) : undefined;
-      const summary = await financeService.getSummary(year);
+      const yearRaw = req.query.year ? Number(req.query.year) : undefined;
+      const yearFromRaw = req.query.yearFrom ? Number(req.query.yearFrom) : undefined;
+      const yearToRaw = req.query.yearTo ? Number(req.query.yearTo) : undefined;
+      const startYearRaw = req.query.startYear ? Number(req.query.startYear) : undefined;
+      const endYearRaw = req.query.endYear ? Number(req.query.endYear) : undefined;
+
+      const summary = await financeService.getSummary({
+        year: Number.isFinite(yearRaw) ? yearRaw : undefined,
+        yearFrom: Number.isFinite(yearFromRaw) ? yearFromRaw : undefined,
+        yearTo: Number.isFinite(yearToRaw) ? yearToRaw : undefined,
+        startYear: Number.isFinite(startYearRaw) ? startYearRaw : undefined,
+        endYear: Number.isFinite(endYearRaw) ? endYearRaw : undefined,
+        region: req.query.region?.toString(),
+        irn: req.query.irn?.toString(),
+        financingType: req.query.financingType?.toString(),
+        cofinancing: req.query.cofinancing?.toString(),
+        expense: req.query.expense?.toString(),
+        priority: req.query.priority?.toString(),
+        competition: req.query.competition?.toString() ?? req.query.contest?.toString(),
+        applicant: req.query.applicant?.toString(),
+        customer: req.query.customer?.toString(),
+        status: req.query.status?.toString()
+      });
       res.status(200).json(summary);
+    })
+  );
+
+  router.get(
+    "/filters",
+    asyncHandler(async (req, res) => {
+      const yearRaw = req.query.year ? Number(req.query.year) : undefined;
+      const yearFromRaw = req.query.yearFrom ? Number(req.query.yearFrom) : undefined;
+      const yearToRaw = req.query.yearTo ? Number(req.query.yearTo) : undefined;
+      const startYearRaw = req.query.startYear ? Number(req.query.startYear) : undefined;
+      const endYearRaw = req.query.endYear ? Number(req.query.endYear) : undefined;
+
+      const filters = await financeService.getFilters({
+        year: Number.isFinite(yearRaw) ? yearRaw : undefined,
+        yearFrom: Number.isFinite(yearFromRaw) ? yearFromRaw : undefined,
+        yearTo: Number.isFinite(yearToRaw) ? yearToRaw : undefined,
+        startYear: Number.isFinite(startYearRaw) ? startYearRaw : undefined,
+        endYear: Number.isFinite(endYearRaw) ? endYearRaw : undefined,
+        region: req.query.region?.toString(),
+        irn: req.query.irn?.toString(),
+        financingType: req.query.financingType?.toString(),
+        cofinancing: req.query.cofinancing?.toString(),
+        expense: req.query.expense?.toString(),
+        priority: req.query.priority?.toString(),
+        competition: req.query.competition?.toString() ?? req.query.contest?.toString(),
+        applicant: req.query.applicant?.toString(),
+        customer: req.query.customer?.toString(),
+        status: req.query.status?.toString()
+      });
+      res.status(200).json(filters);
+    })
+  );
+
+  router.get(
+    "/filters-meta",
+    asyncHandler(async (req, res) => {
+      const yearRaw = req.query.year ? Number(req.query.year) : undefined;
+      const yearFromRaw = req.query.yearFrom ? Number(req.query.yearFrom) : undefined;
+      const yearToRaw = req.query.yearTo ? Number(req.query.yearTo) : undefined;
+      const startYearRaw = req.query.startYear ? Number(req.query.startYear) : undefined;
+      const endYearRaw = req.query.endYear ? Number(req.query.endYear) : undefined;
+
+      const meta = await financeService.getFilterMeta({
+        year: Number.isFinite(yearRaw) ? yearRaw : undefined,
+        yearFrom: Number.isFinite(yearFromRaw) ? yearFromRaw : undefined,
+        yearTo: Number.isFinite(yearToRaw) ? yearToRaw : undefined,
+        startYear: Number.isFinite(startYearRaw) ? startYearRaw : undefined,
+        endYear: Number.isFinite(endYearRaw) ? endYearRaw : undefined,
+        region: req.query.region?.toString(),
+        irn: req.query.irn?.toString(),
+        financingType: req.query.financingType?.toString(),
+        cofinancing: req.query.cofinancing?.toString(),
+        expense: req.query.expense?.toString(),
+        priority: req.query.priority?.toString(),
+        competition: req.query.competition?.toString() ?? req.query.contest?.toString(),
+        applicant: req.query.applicant?.toString(),
+        customer: req.query.customer?.toString(),
+        status: req.query.status?.toString()
+      });
+      res.status(200).json(meta);
     })
   );
 

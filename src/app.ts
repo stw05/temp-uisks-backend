@@ -56,9 +56,9 @@ export const buildApp = (): express.Express => {
 
   const projectService = new ProjectService(projectRepository);
   const employeeService = new EmployeeService(employeeRepository);
-  const publicationService = new PublicationService(publicationRepository);
-  const financeService = new FinanceService(financeRepository);
-  const dashboardService = new DashboardService(projectRepository, employeeRepository, publicationRepository, financeRepository);
+  const publicationService = new PublicationService(publicationRepository, projectRepository);
+  const financeService = new FinanceService(financeRepository, projectRepository);
+  const dashboardService = new DashboardService(projectRepository);
 
   app.use("/api", healthRoutes);
   app.use(

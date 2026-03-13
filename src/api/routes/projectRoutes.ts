@@ -18,6 +18,9 @@ export const buildProjectRoutes = (
     "/",
     asyncHandler(async (req, res) => {
       const pagination = readPaginationFromQuery(req);
+      const trlRaw = req.query.trl ? Number(req.query.trl) : undefined;
+      const startYearRaw = req.query.startYear ? Number(req.query.startYear) : undefined;
+      const endYearRaw = req.query.endYear ? Number(req.query.endYear) : undefined;
       const projects = await projectService.list({
         irn: req.query.irn?.toString(),
         status: req.query.status?.toString(),
@@ -25,6 +28,12 @@ export const buildProjectRoutes = (
         financingType: req.query.financingType?.toString(),
         priority: req.query.priority?.toString(),
         applicant: req.query.applicant?.toString(),
+        contest: req.query.contest?.toString(),
+        customer: req.query.customer?.toString(),
+        mrnti: req.query.mrnti?.toString(),
+        trl: Number.isFinite(trlRaw) ? trlRaw : undefined,
+        startYear: Number.isFinite(startYearRaw) ? startYearRaw : undefined,
+        endYear: Number.isFinite(endYearRaw) ? endYearRaw : undefined,
         q: req.query.q?.toString(),
         ...pagination
       });
@@ -43,6 +52,9 @@ export const buildProjectRoutes = (
   router.get(
     "/filters-meta",
     asyncHandler(async (req, res) => {
+      const trlRaw = req.query.trl ? Number(req.query.trl) : undefined;
+      const startYearRaw = req.query.startYear ? Number(req.query.startYear) : undefined;
+      const endYearRaw = req.query.endYear ? Number(req.query.endYear) : undefined;
       const filters = await projectService.getFilterMeta({
         irn: req.query.irn?.toString(),
         status: req.query.status?.toString(),
@@ -50,6 +62,12 @@ export const buildProjectRoutes = (
         financingType: req.query.financingType?.toString(),
         priority: req.query.priority?.toString(),
         applicant: req.query.applicant?.toString(),
+        contest: req.query.contest?.toString(),
+        customer: req.query.customer?.toString(),
+        mrnti: req.query.mrnti?.toString(),
+        trl: Number.isFinite(trlRaw) ? trlRaw : undefined,
+        startYear: Number.isFinite(startYearRaw) ? startYearRaw : undefined,
+        endYear: Number.isFinite(endYearRaw) ? endYearRaw : undefined,
         q: req.query.q?.toString()
       });
       res.status(200).json(filters);

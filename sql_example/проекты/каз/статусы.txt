@@ -1,3 +1,0 @@
-SELECT
-os.name_kz
-FROM obj_status os
