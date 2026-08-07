@@ -8,7 +8,8 @@
     "dev": "tsx watch src/main.ts",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/main.js",
-    "import:projects:xlsx": "node scripts/import-projects-xlsx.mjs"
+    "import:projects:xlsx": "node scripts/import-projects-xlsx.mjs",
+    "import:employees:xlsx": "node scripts/import-employees-xlsx.mjs"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
