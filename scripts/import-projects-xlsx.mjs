@@ -258,6 +258,7 @@ const ALIASES = {
   id: ["ИРН", "irn", "id", "number", "project_id"],
   title: [
     "Название проекта",
+    "Наименование на русском языке",
     "title",
     "project_title",
     "topicrus",
@@ -278,7 +279,7 @@ const ALIASES = {
     "Сумма финансирования (запр)",
     "Сумма"
   ],
-  spent: ["spent", "expense", "fact_total", "Освоено", "Кассовое исполнение"],
+  spent: ["Фактически израсходованная сумма", "spent", "expense", "fact_total", "Освоено", "Кассовое исполнение"],
   priority: ["Приоритет", "priority", "Приоритетное научное направление"],
   financingType: ["Тип финансирования", "financing_type", "competition_type", "GF/PCF/PK", "Тип конкурса"],
   startDate: ["Дата начала", "start_date", "start", "year_b", "Начало"],
